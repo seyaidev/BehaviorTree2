@@ -2,6 +2,8 @@
 
 BehaviorTree2 is an implementation of the "behavior tree" paradigm for managing behavior. This allows us to create relatively complex patterns of behavior without much getting "lost in the sauce", so to speak. In *behavior trees*, actions are represented as **tasks**, or "leaves". These tasks are then collected in a container called a **tree**, which we "run" through in order to determine what task should be done at a given point in time.
 
+**Huge props** to tyridge77 for his work on the optimzations made in his rewrite of the original module, as well as his [new plugin to visually create behavior trees](https://devforum.roblox.com/t/free-btrees-visual-editor-v1-0/461015)!
+
 ## Nodes
 Nodes contain information about how to handle *something*. This can either be a task, or a manipulation of tasks. In BT2, there are 3 types of nodes:
 * Tasks
@@ -181,5 +183,3 @@ end
 ```
 
 That's pretty much all there is to BehaviorTree2. Go nuts with it or something. If you have any issues or questions, feel free to ask about them on the [DevForum post](https://devforum.roblox.com/t/behaviortree2-ai-handling-module/451047). 
-
-Credit to tyridge77 for his work on the optimzations made in his rewrite of the original module, as well as his [new plugin to visually create behavior trees](https://devforum.roblox.com/t/free-btrees-visual-editor-v1-0/461015)!
