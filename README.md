@@ -7,7 +7,7 @@ BehaviorTree2 is an implementation of the "behavior tree" paradigm for managing 
 ## Nodes
 Nodes contain information about how to handle *something*. This can either be a task, or a manipulation of tasks. In BT2, there are 3 types of nodes:
 * Tasks
-* "Collections"
+* Selectors
 * Decorators
 
 Creating nodes creates new objects, so be aware of that when reusing them for different agents.
