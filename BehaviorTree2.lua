@@ -112,7 +112,18 @@ local BehaviorTree = {} do
 			nodes[#nodes + 1] = random
 			
 			for _,childNode in pairs(node.params.nodes) do
-				random.indices[#random.indices + 1] = #nodes + 1
+				if childNode.weight then
+					childNode.weight = math.clamp(childNode.weight, 1, 200)
+					local base = #random.indices + 1
+					local index = #nodes + 1
+
+					for i = 1, childNode.weight do
+						random.indices[base + i] = index
+					end
+				else
+					random.indices[#random.indices + 1] = #nodes + 1
+				end
+
 				ProcessNode(childNode, nodes)
 			end
 		elseif node.type == "tree" then
