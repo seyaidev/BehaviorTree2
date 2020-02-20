@@ -113,7 +113,7 @@ local BehaviorTree = {} do
 			
 			for _,childNode in pairs(node.params.nodes) do
 				if childNode.weight then
-					childNode.weight = math.clamp(childNode.weight, 1, 200)
+					-- childNode.weight = math.clamp(childNode.weight, 1, 200)
 					local base = #random.indices + 1
 					local index = #nodes + 1
 

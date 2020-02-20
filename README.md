@@ -100,7 +100,7 @@ Random = BehaviorTree2.Random:new({
     }
 })
 ```
-Nodes can also have an optional `weight` attribute that will affect `Random`. Default is `1`, and is capped at `200`. Two nodes with the same `weight` *should* have equal chances at being selected.
+Nodes can also have an optional `weight` attribute that will affect `Random`. Default is `1`.
 
 ```
 node1 = BehaviorTree2.Task:new({
