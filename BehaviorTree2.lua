@@ -112,12 +112,12 @@ local BehaviorTree = {} do
 			nodes[#nodes + 1] = random
 			
 			for _,childNode in pairs(node.params.nodes) do
-				if childNode.weight then
+				if childNode.params.weight then
 					-- childNode.weight = math.clamp(childNode.weight, 1, 200)
-					local base = #random.indices + 1
+					local base = #random.indices
 					local index = #nodes + 1
 
-					for i = 1, childNode.weight do
+					for i = 1, childNode.params.weight do
 						random.indices[base + i] = index
 					end
 				else
@@ -233,8 +233,9 @@ local BehaviorTree = {} do
 		local tree = params.tree
 		local nodes = {}
 		
+
 		ProcessNode({ type = "tree", tree = tree }, nodes)
-		
+
 		return setmetatable({
 			nodes = nodes,
 			index = 1,
