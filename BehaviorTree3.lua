@@ -160,7 +160,7 @@ local function ProcessNode(node, nodes)
 		assert(#node.params.nodes == 1, "Can't process tree; hanging repeat decorator")
 		
 		local repeatNode, myIndex = addNode("repeat")
-		repeatNode.repgoal = node.params.Count and node.params.Count > 0 and node.params.Count or nil
+		repeatNode.repgoal = node.params.count and node.params.count > 0 and node.params.count or nil
 		repeatNode.repcount = 0
 		repeatNode.childindex = myIndex + 1
 		repeatNode.onsuccess = true
@@ -318,12 +318,12 @@ function TreeProto:run(...)
 				break
 			elseif status == SUCCESS then
 				if node.finish then
-					node.finish(obj, ...)
+					node.finish(obj, status, ...)
 				end
 				index = node.onsuccess
 			elseif status == FAIL then
 				if node.finish then
-					node.finish(obj, ...)
+					node.finish(obj, status, ...)
 				end
 				index = node.onfail
 			else
@@ -409,7 +409,7 @@ end
 
 
 function TreeProto:clone()
-	-- Shallow copy the nodes, including copy child trees
+	-- Shallow copy the nodes, plus copy child trees
 	local nodes = {}
 	for i, node in pairs(self.nodes) do
 		local newNode = {}
