@@ -1,20 +1,20 @@
 # BehaviorTree3
 
 This module is a fork of BehaviorTrees2 by oniich_n. The following are the improvements/changes:
-    - Decorators will work as expected when parents of arbitrary nodes, instead of only Task nodes
-    - Calling tree:run() will return the outcome of the tree (success [1], fail [2], running [3])
-    - Added repeater node
-        - can repeat infinitely with a "count" parameter of nil or <= 0
-        - returns success when done repeating
-        - returns fail if a "breakonfail" parameter is true and it receives a failed result from its child
-    - Added tree node which will call another tree and return the result of the other tree
-    - If a success/fail node is left hanging without a child, it will directly return success/fail
-    - Improved ProcessNode organization and readability by adding the interateNodes() iterator and the addNode() function
-    - Changed node runner from using string node states to using number enums, to avoid string comparisons. Should be slightly faster.
-    - Changed tasks to report their status by returning a status number enum, instead of calling a success/fail/running function on self
-    - Added some more assertions in ProcessNode
-    - Added comments and documentation so it's a little easier to add new nodes
-    - Changed "Task"/"Selector" language to more generic "Leaf"/"Composite"
+* Previously, Decorators would only work when parented to Task node. Now, they can be placed arbirarily and will work as expected. Internally, decorators work differently, but I preserved the clever and efficient tree traversal algorithm that oniich_n implemented in BehaviorTrees2. Should still be just as fast.
+* Calling tree:run() will return the outcome of the tree (success [1], fail [2], running [3])
+* Added repeater node
+    * can repeat infinitely with a "count" parameter of nil or <= 0
+    * returns success when done repeating
+    * returns fail if a "breakonfail" parameter is true and it receives a failed result from its child
+* Added tree node which will call another tree and return the result of the other tree
+* If a success/fail node is left hanging without a child, it will directly return success/fail
+* Improved ProcessNode organization and readability by adding the interateNodes() iterator and the addNode() function
+* Changed node runner from using string node states to using number enums, to avoid string comparisons. Should be slightly faster.
+* Changed tasks to report their status by returning a status number enum, instead of calling a success/fail/running function on self
+* Added some more assertions in ProcessNode
+* Added comments and documentation so it's a little easier to add new nodes
+* Changed "Task"/"Selector" language to more generic "Leaf"/"Composite"
 
 BehaviorTree3 is an implementation of the "behavior tree" paradigm for managing behavior. This allows us to create relatively complex patterns of behavior without much getting "lost in the sauce", so to speak. In *behavior trees*, actions are represented as **tasks**, or "leaves". These tasks are then collected in a container called a **tree**, which we "run" through in order to determine what task should be done at a given point in time.
 
@@ -35,7 +35,7 @@ The most commonly used leaf is a `Task`. Let's take a look at how they're writte
 ```
 local SUCCESS,FAIL,RUNNING = 1,2,3
 
-local NewNode = BehaviorTree2.Task({
+local NewNode = BehaviorTree3.Task({
     
     -- 'start' and 'finish' functions are optional. only "run" is required!
 
@@ -72,8 +72,8 @@ The `run` function is the "base of operations" for a task. Here, we handle anyth
 The `Tree` is a special `Leaf` type that will execute another tree and pass the result of that tree to its parent.
 
 ```
-local AnotherTree = BehaviorTree:new(...)
-local NewNode = BehaviorTree2.Task({tree = AnotherTree})
+local AnotherTree = BehaviorTree3:new(...)
+local NewNode = BehaviorTree3.Task({tree = AnotherTree})
 ````
 ### Composites
 These nodes take multiple `Leafs` and give them order. In BT3, we have `Sequence`, `Selector`, `Random` types for `Compites`.
@@ -82,7 +82,7 @@ These nodes take multiple `Leafs` and give them order. In BT3, we have `Sequence
 The `Sequence` process the nodes it is given in sequence of the order they are defined. If any of its subnodes fail, then it will not continue to process the `subnodes` that follow it and return a `fail` state itself.
 
 ```
-Sequence = BehaviorTree2.Sequence({
+Sequence = BehaviorTree3.Sequence({
     nodes = {
         node1,
         node2, -- if this failed, the next step would process node1
@@ -94,7 +94,7 @@ Sequence = BehaviorTree2.Sequence({
 The `Selector` node will process every node until one of them succeeds, after which it will return `success` itself. If none of its subnodes succeed, then this `Composite` would return a `fail` state.
 
 ```
-Priority = BehaviorTree2.Selector({
+Priority = BehaviorTree3.Selector({
     nodes = {
         node1,
         node2,
@@ -105,7 +105,7 @@ Priority = BehaviorTree2.Selector({
 #### Random
 This `Selector` will randomly select a subnode to process, and will return whatever state that node returns.
 ```
-Random = BehaviorTree2.Random({
+Random = BehaviorTree3.Random({
     nodes = {
         node1,
         node2,
@@ -116,7 +116,7 @@ Random = BehaviorTree2.Random({
 Nodes can also have an optional `weight` attribute that will affect `Random`. Default is `1`.
 
 ```
-node1 = BehaviorTree2.Task({
+node1 = BehaviorTree3.Task({
     weight = 10,
     run = function(task, object)
         print("Weight: 10")
@@ -124,7 +124,7 @@ node1 = BehaviorTree2.Task({
     end
 })
 
-node2 = BehaviorTree2.Task({
+node2 = BehaviorTree3.Task({
     weight = 10,
     run = function(task, object)
         print("Also weight: 10")
@@ -132,7 +132,7 @@ node2 = BehaviorTree2.Task({
     end
 })
 
-node3 = BehaviorTree2.Task({
+node3 = BehaviorTree3.Task({
     weight = 200,
     run = function(task, object)
         print('You probably won't see "Weight: 10" printed'.)
@@ -146,13 +146,13 @@ Decorators are nodes that wrap other nodes and alter their task state. Right now
 
 These can be written as such.
 ```
-Invert = BehaviorTree2.Invert({
+Invert = BehaviorTree3.Invert({
     node = nodeHere 
 })
 ````
 `Repeat` decorators will repeat their children node tasks until `count`, or indefinitely if `count` is nil or < 0, after which they will return a `success` state. If `breakonfail` is true and its child node fails, it will stop repeating and return a `fail` state.
 ````
-Repeat = BehaviorTree2.Repeat({
+Repeat = BehaviorTree3.Repeat({
     node = nodeHere,
     count = 3,
     breakonfail = true
@@ -162,13 +162,13 @@ Repeat = BehaviorTree2.Repeat({
 Once you have your nodes set up and ready to go, we can start planting some trees. A `Tree` starts with any `Selector`, which should have `Task` nodes in them or even other `Selector` nodes with other nodes in them. They can be instantiated by calling `BehaviorTree2:new()` with a `table` containing tree information as its only argument.
 
 ```
-Tree = BehaviorTree2:new({
-    tree = BehaviorTree2.Sequence({
+Tree = BehaviorTree3:new({
+    tree = BehaviorTree3.Sequence({
         nodes = {
             node1,
             node2,
 
-            BehaviorTree2.Random({
+            BehaviorTree3.Random({
                 nodes = {
                     node3,
                     node4
@@ -189,7 +189,7 @@ As you can see, we can nest `Composite` nodes within each other. This is where t
 If you've noticed back in the `Task` section, there was a second parameter in the task functions called `object`. This is a reference to whatever outside thing the `Tree` might be acting on. We can pass this into the tree by calling `Tree:setObject(thingToSetObjectTo)` before we begin to run the tree. (*To be honest, I've never tried dynamically changing the object of a tree, although I don't see how that could be beneficial*)
 
 ```
-Tree = BehaviorTree2:new({
+Tree = BehaviorTree3:new({
     tree = BehaviorTree2.Sequence({
         -- nodes from earlier
     })
