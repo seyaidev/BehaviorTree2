@@ -1,3 +1,26 @@
+--[[
+	BEHAVIOR TREES V3
+	
+	Originally by iniich_n and tyridge77: https://devforum.roblox.com/t/behaviortree2-create-complex-behaviors-with-ease/451047
+	Forked and improved by defaultio
+
+	Improvements/changes:
+		- Decorators will work as expected when parents of arbitrary nodes, instead of only Task nodes
+		- Calling tree:run() will return the outcome of the tree (success [1], fail [2], running [3])
+		- Added repeater node
+			- can repeat infinitely with a "count" parameter of nil or <= 0
+			- returns success when done repeating
+			- returns fail if a "breakonfail" parameter is true and it receives a failed result from its child
+		- Added tree node which will call another tree and return the result of the other tree
+		- If a success/fail node is left hanging without a child, it will directly return success/fail
+		- Improved ProcessNode organization and readability by adding the interateNodes() iterator and the addNode() function
+		- Changed node runner from using string node states to using number enums, to avoid string comparisons. Should be slightly faster.
+		- Changed tasks to report their status by returning a status number enum, instead of calling a success/fail/running function on self
+		- Added some more assertions in ProcessNode
+		- Added comments and documentation so it's a little easier to add new nodes
+--]]
+
+
 local BehaviorTree = {}
 
 local SUCCESS,FAIL,RUNNING = 1,2,3
