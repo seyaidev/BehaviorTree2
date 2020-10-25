@@ -66,7 +66,6 @@ Tasks are created by calling `BehaviorTree2.Task()`, with a table defining diffe
 
 The `start` and `finish` functions are usually used to prep and cleanup the work that a task does, like initializing and destroying object properties. However, it is not necessary to define them. A task will function perfectly fine with just the `run` function alone.
 
-##### `run`
 The `run` function is the "base of operations" for a task. Here, we handle anything we would want to do. When we "run" a behavior tree, we would do so in steps. If we wanted real-time behavior, for example, we could run our trees within `RunService.Heartbeat`. Keep in mind the rate at which you will be processing trees when defining this function. Think about where to change the *task state* of a node when writing your function as well. Consider when it should `fail` so that you don't create unintended behavior. (i.e. attacking when you should be walking instead) Remember that you can **only call one state** per step.
 
 #### Trees
