@@ -203,4 +203,4 @@ while true do
 end
 ```
 
-That's pretty much all there is to BehaviorTree3. Go nuts with it or something. If you have any issues or questions, feel free to ask about them on the devforum post [TBD]. 
+That's pretty much all there is to BehaviorTree3. Go nuts with it or something. If you have any issues or questions, feel free to ask about them on the devforum post: https://devforum.roblox.com/t/behaviortrees3-btrees-visual-editor-v3-0/836158 
