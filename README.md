@@ -1,7 +1,7 @@
 # BehaviorTree3
 
 This module is a fork of BehaviorTrees2 by oniich_n. The following are the improvements/changes:
-* Previously, Decorators would only work when parented to Task node. Now, they can be placed arbirarily, and even chained together, and will work as expected. Internally, decorators work slightly differently, but I preserved the clever and efficient tree traversal algorithm that oniich_n implemented in BehaviorTrees2. Should still be just as fast.
+* Previously, Decorators would only work when parented to Task node. Now, they can be placed arbitrarily, and even chained together, and will work as expected. Internally, decorators work slightly differently, but I preserved the clever and efficient tree traversal algorithm that oniich_n implemented in BehaviorTrees2. Should still be just as fast.
 * Calling tree:run() will return the outcome of the tree (success [1], fail [2], running [3])
 * Added repeater node
     * can repeat infinitely with a "count" parameter of nil or <= 0
