@@ -147,13 +147,13 @@ Decorators are nodes that wrap other nodes and alter their task state. Right now
 These can be written as such.
 ```
 Invert = BehaviorTree3.Invert({
-    node = nodeHere 
+    nodes = {nodeHere}
 })
 ````
 `Repeat` decorators will repeat their children node tasks until `count`, or indefinitely if `count` is nil or < 0, after which they will return a `success` state. If `breakonfail` is true and its child node fails, it will stop repeating and return a `fail` state.
 ````
 Repeat = BehaviorTree3.Repeat({
-    node = nodeHere,
+    nodes = {nodeHere},
     count = 3,
     breakonfail = true
 })
