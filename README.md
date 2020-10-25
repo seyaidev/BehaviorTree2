@@ -36,30 +36,35 @@ The most commonly used leaf is a `Task`. Let's take a look at how they're writte
 local SUCCESS,FAIL,RUNNING = 1,2,3
 
 local NewNode = BehaviorTree3.Task({
-    
-    -- 'start' and 'finish' functions are optional. only "run" is required!
 
-    start = function(object)
-        object.i = 0
-        print("I've prepped the task!")
-    end,
+   -- 'start' and 'finish' functions are optional. only "run" is required!
 
-    run = function(object)
-        object.i = object.i+1
-        if object.i == 5 then
-            return SUCCESS
-        elseif object.i > 5 then
-            return FAIL
-        end
+   start = function(object)
+      object.i = 0
+      print("I've prepped the task!")
+   end,
 
-        print("The task is still running...")
-        return RUNNING
-    end,
-    
-    finish = function(object)
-        object.i = nil
-        print("I'm done with the task!)
-    end
+   run = function(object)
+      object.i = object.i+1
+      if object.i == 5 then
+          return SUCCESS
+      elseif object.i > 5 then
+         return FAIL
+   end
+
+   print("The task is still running...")
+      return RUNNING
+   end,
+
+   finish = function(object, status)
+      object.i = nil
+      print("I'm done with the task! My outcome was: ")
+      if status == SUCCESS then
+         print("Success!")
+      elseif status == FAIL then
+         print("Fail!")
+      end
+   end
 })
 ```
 Tasks are created by calling `BehaviorTree2.Task()`, with a table defining different **task functions**. When we run a behavior tree, it will "process" a node in the order `start -> run -> finish`. These functions will *always be called in this order*.
