@@ -179,7 +179,7 @@ Tree = BehaviorTree3:new({
 })
 
 while true do
-    local treeResult = Tree:run()
+    local treeStatus = Tree:run()
     wait(1)
 end
 ```
@@ -198,7 +198,7 @@ Tree = BehaviorTree3:new({
 Tree:setObject(Player)
 
 while true do
-    local treeResult = Tree:run()
+    local treeStatus = Tree:run()
     wait(1)
 end
 ```
