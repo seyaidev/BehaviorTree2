@@ -121,11 +121,13 @@ Random = BehaviorTree3.Random({
 Nodes can also have an optional `weight` attribute that will affect `Random`. Default is `1`.
 
 ```
+local SUCCESS,FAIL,RUNNING = 1,2,3
+
 node1 = BehaviorTree3.Task({
     weight = 10,
     run = function(task, object)
         print("Weight: 10")
-        task:success()
+        return SUCCESS
     end
 })
 
@@ -133,7 +135,7 @@ node2 = BehaviorTree3.Task({
     weight = 10,
     run = function(task, object)
         print("Also weight: 10")
-        task:success()
+        return SUCCESS
     end
 })
 
@@ -141,7 +143,7 @@ node3 = BehaviorTree3.Task({
     weight = 200,
     run = function(task, object)
         print('You probably won't see "Weight: 10" printed'.)
-        task:success()
+        return SUCCESS
     end
 })
 ```
