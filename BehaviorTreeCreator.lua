@@ -127,7 +127,9 @@ function TreeCreator:_buildNode(folder)
 	if nodeType == "Task" then
 		local sourcetask = self:_getSourceTask(folder)
 		assert(sourcetask, "could't build tree; task node had no module")
-		parameters.module = sourcetask
+		parameters.start = sourcetask.start
+		parameters.run = sourcetask.run
+		parameters.finish = sourcetask.finish
 	elseif nodeType == "Tree" then
 		local tree = self:_getGetTreeFromId(parameters.treeid)
 		assert(tree, string.format("could't build tree; couldn't get tree object for tree node with TreeID:  %s!",tostring(parameters.treeid)))
