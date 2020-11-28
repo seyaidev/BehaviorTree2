@@ -74,12 +74,14 @@ local function ProcessNode(node, nodes)
 	--------- LEAF NODES ---------
 	
 	if node.type == "task" then
-		assert(node.params.module, "Can't process tree; task leaf node has no linked task module")
+		assert(node.params.start, "Can't process tree; task leaf node has no start func parameter")
+		assert(node.params.run, "Can't process tree; task leaf node has no run func parameter")
+		assert(node.params.finish, "Can't process tree; task leaf node has no finish func parameter")
 		
 		local taskNode = addNode("task")
-		taskNode.start = node.params.module.start
-		taskNode.run = node.params.module.run
-		taskNode.finish = node.params.module.finish
+		taskNode.start = node.params.start
+		taskNode.run = node.params.run
+		taskNode.finish = node.params.finish
 		taskNode.onsuccess = true
 		taskNode.onfail = false
 		
