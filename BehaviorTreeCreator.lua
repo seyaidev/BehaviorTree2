@@ -1,16 +1,23 @@
 --[[
-	BEHAVIOR TREE CREATOR V2
+	BEHAVIOR TREE CREATOR V4
 	
 	Originally by tyridge77: https://devforum.roblox.com/t/btrees-visual-editor-v2-0/461015
 	Forked and improved by defaultio
 
-	Improvements/changes:
-		- Changed TreeCreator:Create parameters from obj, treeFolder to treeFolder, obj. Made obj parameter optional.
-		- Trees are created and cached from the tree folder directly, rather than a string treeindex.
-		- Added :SetTreeID(treeFolder, treeId) for use with Tree nodes
-		- Added comments/documentation
 	
+	Changes by tyridge77(November 23rd, 2020)
+	- Trees are now created only once, and decoupled from objects
+	- You now create trees simply by doing BehaviorTreeCreator:Create(treeFolder) - if a tree is already made for that folder it'll return that
+	- You now run Trees via Tree:Run(object) 
+	- You can now abort a tree via Tree:Abort(object) , used for switching between trees but still calling finish on the previously running task
+	- Added support for live debugging
+	- Added BehaviorTreeCreator:RegisterBlackboard(name,table)
+		- This is used in conjunction with the new blackboard query node
+	- Changed up some various internal stuff
 --]]
+
+local CollectionService = game:GetService("CollectionService")
+local TREE_TAG = "_BTree"
 
 local TreeCreator = {}
 local BehaviorTree3 = require(script.BehaviorTree3)
@@ -19,18 +26,15 @@ local Trees = {}
 local SourceTasks = {}
 local TreeIDs = {}
 
-
 --------------------------------------------
 -------------- PUBLIC METHODS --------------
 
--- Create tree object from a treeFolder. Optionaal object parameter to associate with the tree
-function TreeCreator:Create(treeFolder, obj)
+-- Create tree object from a treeFolder.
+function TreeCreator:Create(treeFolder)
 	assert(treeFolder, "Invalid parameters, expecting treeFolder, object")
 	
 	local Tree = self:_getTree(treeFolder)
 	if Tree then
-		Tree = Tree:clone()
-		Tree:setObject(obj)
 		return Tree
 	else
 		warn("Couldn't get tree for ",treeFolder)
@@ -38,12 +42,9 @@ function TreeCreator:Create(treeFolder, obj)
 end
 
 
--- Use SetTreeID to associate a tree folder with a string id, for use with Tree nodes
-function TreeCreator:SetTreeID(treeId, treeFolder)
-	assert(typeof(treeFolder) == "Instance" and treeFolder:IsA("Folder"), "SetTreeID requires a treeFolder parameter")
-	assert(typeof(treeId) == "string", "SetTreeID requires a treeId string parameter")
-	
-	TreeIDs[treeId] = treeFolder
+function TreeCreator:RegisterSharedBlackboard(index,tab)
+	assert(index and tab and typeof(index) == "string" and typeof(tab) == "table","RegisterSharedBlackboard takes two arguments in the form of [string] index,[table] table")
+	BehaviorTree3.SharedBlackboards[index] = tab
 end
 
 
@@ -87,14 +88,6 @@ function TreeCreator:_getSourceTask(folder)
 end
 
 
--- For tree nodes, get tree object from 
-function TreeCreator:_getGetTreeFromId(treeId)
-	local folder = TreeIDs[treeId]
-	if folder then
-		return self:Create(folder)
-	end
-end
-
 
 function TreeCreator:_buildNode(folder)
 	local nodeType = folder.Type.Value
@@ -124,6 +117,7 @@ function TreeCreator:_buildNode(folder)
 	
 	-- Add nodes and task module/tree to node parameters
 	parameters.nodes = orderedChildren
+	parameters.nodefolder = folder
 	if nodeType == "Task" then
 		local sourcetask = self:_getSourceTask(folder)
 		assert(sourcetask, "could't build tree; task node had no module")
@@ -138,13 +132,14 @@ function TreeCreator:_buildNode(folder)
 	
 	-- Initialize node with BehaviorTree3
 	local node = BehaviorTree3[nodeType](parameters)
-	parameters.weight=weight
+	node.weight=weight
 	
 	return node
 end
 
 
 function TreeCreator:_createTree(treeFolder)
+	print("Attempt create tree: ",treeFolder)
 	local nodes = treeFolder.Nodes
 	local RootFolder = nodes:FindFirstChild("Root")
 	assert(RootFolder, string.format("Could not find Root under BehaviorTrees.Trees.%s.Nodes!",treeFolder.Name))
@@ -152,14 +147,26 @@ function TreeCreator:_createTree(treeFolder)
 	
 	local firstNodeFolder = RootFolder.Outputs:GetChildren()[1].Value
 	local root = self:_buildNode(firstNodeFolder)
-	local Tree = BehaviorTree3:new({tree=root})
+	local Tree = BehaviorTree3:new({tree=root,treeFolder = treeFolder})
 	Trees[treeFolder] = Tree
+	TreeIDs[treeFolder.Name] = Tree
 	return Tree	
 end
 
 
 function TreeCreator:_getTree(treeFolder)
 	return Trees[treeFolder] or self:_createTree(treeFolder)
+end
+-- For tree ndoes to get a tree from
+function TreeCreator:_getGetTreeFromId(treeId)
+	local tree = TreeIDs[treeId]
+	if not tree then
+		for i,folder in pairs(CollectionService:GetTagged(TREE_TAG)) do
+			if folder.Name == treeId then
+				return self:_createTree(folder)
+			end
+		end
+	end
 end
 
 
