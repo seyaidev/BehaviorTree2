@@ -1,5 +1,5 @@
 --[[
-    BEHAVIOR TREES V3
+    BEHAVIOR TREES V4
     
 	Originally by iniich_n and tyridge77: https://devforum.roblox.com/t/behaviortree2-create-complex-behaviors-with-ease/451047
 	Forked and improved by defaultio
@@ -146,9 +146,7 @@ local function ProcessNode(node, nodes)
 	--------- LEAF NODES ---------
 
 	if node.type == "task" then
-		assert(node.params.start, "Can't process tree; task leaf node has no start func parameter")
 		assert(node.params.run, "Can't process tree; task leaf node has no run func parameter")
-		assert(node.params.finish, "Can't process tree; task leaf node has no finish func parameter")
 
 		local taskNode = addNode("task")
 		taskNode.start = node.params.start
