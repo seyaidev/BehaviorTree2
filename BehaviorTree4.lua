@@ -1,5 +1,5 @@
 --[[
-    BEHAVIOR TREES V4
+    BEHAVIOR TREES V3
     
 	Originally by iniich_n and tyridge77: https://devforum.roblox.com/t/behaviortree2-create-complex-behaviors-with-ease/451047
 	Forked and improved by defaultio
