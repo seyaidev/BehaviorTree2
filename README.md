@@ -39,12 +39,12 @@ local NewNode = BehaviorTree3.Task({
 
    -- 'start' and 'finish' functions are optional. only "run" is required!
 
-   start = function(object)
+   start = function(object, ...)
       object.i = 0
       print("I've prepped the task!")
    end,
 
-   run = function(object)
+   run = function(object, ...)
       object.i = object.i+1
       if object.i == 5 then
           return SUCCESS
@@ -56,7 +56,7 @@ local NewNode = BehaviorTree3.Task({
       return RUNNING
    end,
 
-   finish = function(object, status)
+   finish = function(object, status, ...)
       object.i = nil
       print("I'm done with the task! My outcome was: ")
       if status == SUCCESS then
@@ -72,6 +72,14 @@ Tasks are created by calling `BehaviorTree2.Task()`, with a table defining diffe
 The `start` and `finish` functions are usually used to prep and cleanup the work that a task does, like initializing and destroying object properties. However, it is not necessary to define them. A task will function perfectly fine with just the `run` function alone.
 
 The `run` function is the "base of operations" for a task. Here, we handle anything we would want to do. When we "run" a behavior tree, we would do so in steps. If we wanted real-time behavior, for example, we could run our trees within `RunService.Heartbeat`. Keep in mind the rate at which you will be processing trees when defining this function. Think about where to change the *task state* of a node when writing your function as well. Consider when it should `fail` so that you don't create unintended behavior. (i.e. attacking when you should be walking instead) Remember that you can **only call one state** per step.
+
+Notice the `object, ...` parameters passed to `start`, `run`, and `finish`. This object is a table that is passed to the tree when `run` is called on it, and any additional parameters are also passed along.
+
+#### Blackboard Query
+
+When running a tree on an object, a `Blackboard` table will be injected into the object if one does not exist already. This can be used by the Blackboard Query node for easy state lookup. A blackboard query is commonly used to see if a value is set or not in order to dictate the flow of relevant logic in a tree.
+
+You can achieve the same effect with tasks, but it's a bit faster if you only need to perform a simple boolean or nil check
 
 #### Trees
 The `Tree` is a special `Leaf` type that will execute another tree and pass the result of that tree to its parent.
@@ -125,7 +133,7 @@ local SUCCESS,FAIL,RUNNING = 1,2,3
 
 node1 = BehaviorTree3.Task({
     weight = 10,
-    run = function(task, object)
+    run = function(object)
         print("Weight: 10")
         return SUCCESS
     end
@@ -133,7 +141,7 @@ node1 = BehaviorTree3.Task({
 
 node2 = BehaviorTree3.Task({
     weight = 10,
-    run = function(task, object)
+    run = function(object)
         print("Also weight: 10")
         return SUCCESS
     end
@@ -141,13 +149,23 @@ node2 = BehaviorTree3.Task({
 
 node3 = BehaviorTree3.Task({
     weight = 200,
-    run = function(task, object)
+    run = function(object)
         print('You probably won't see "Weight: 10" printed'.)
         return SUCCESS
     end
 })
 ```
+#### While
+The `While` Only accepts two children, a condition(1st child), and an action(2nd child) It repeats until either the condition returns fail, wherein the node itself returns fail, or the action returns success, wherein the node itself returns success.
 
+```
+While = BehaviorTree3.While({
+    nodes = {
+        condition, -- If this node returns fail, return fail
+        action -- When this node returns success, return success
+    }
+})
+```
 ### Decorators
 Decorators are nodes that wrap other nodes and alter their task state. Right now, there are `Succeed`, `Fail`, `Invert`, and `Repeat` decorators. `Succeed`, `Fail`, and `Invert` are pretty self-explanatory, and are helpful for when you start making more complex trees via nested `Collections`. 
 
@@ -166,7 +184,7 @@ Repeat = BehaviorTree3.Repeat({
 })
 ````
 ## The Tree
-Once you have your nodes set up and ready to go, we can start planting some trees. A `Tree` starts with any `Selector`, which should have `Task` nodes in them or even other `Selector` nodes with other nodes in them. They can be instantiated by calling `BehaviorTree2:new()` with a `table` containing tree information as its only argument.
+Once you have your nodes set up and ready to go, we can start planting some trees. A `Tree` usually starts with any `Selector`, which should have `Task` nodes in them or other `Selector` nodes with other nodes in them. They can be instantiated by calling `BehaviorTree2:new()` with a `table` containing tree information as its only argument.
 
 ```
 Tree = BehaviorTree3:new({
@@ -184,28 +202,23 @@ Tree = BehaviorTree3:new({
         }
     })
 })
-
-while true do
-    local treeStatus = Tree:run()
-    wait(1)
-end
 ```
 As you can see, we can nest `Composite` nodes within each other. This is where the magic of behavior trees come in! 
 
-### `Tree:setObject()`
-If you've noticed back in the `Task` section, there was a second parameter in the task functions called `object`. This is a reference to whatever outside thing the `Tree` might be acting on. We can pass this into the tree by calling `Tree:setObject(thingToSetObjectTo)` before we begin to run the tree. (*To be honest, I've never tried dynamically changing the object of a tree, although I don't see how that could be beneficial*)
+### Running trees
+To run a tree, call `:run` on the tree object, passing it a table. This table is the relevant object or actor that tree is dictating behavior for. You can also pass any additional parameters you desire, and these will be passed along to the task functions.
 
 ```
+local actorObject = {...}
+
 Tree = BehaviorTree3:new({
     tree = BehaviorTree2.Sequence({
         -- nodes from earlier
     })
 })
 
-Tree:setObject(Player)
-
 while true do
-    local treeStatus = Tree:run()
+    local treeStatus = Tree:run(actorObject)
     wait(1)
 end
 ```
