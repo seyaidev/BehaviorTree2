@@ -1,5 +1,5 @@
 --[[
-	BEHAVIOR TREE CREATOR V4
+    BEHAVIOR TREE CREATOR V4
 	
 	Originally by tyridge77: https://devforum.roblox.com/t/btrees-visual-editor-v2-0/461015
 	Forked and improved by defaultio
@@ -125,7 +125,7 @@ function TreeCreator:_buildNode(folder)
 		parameters.run = sourcetask.run
 		parameters.finish = sourcetask.finish
 	elseif nodeType == "Tree" then
-		local tree = self:_getGetTreeFromId(parameters.treeid)
+		local tree = self:_getTreeFromId(parameters.treeid)
 		assert(tree, string.format("could't build tree; couldn't get tree object for tree node with TreeID:  %s!",tostring(parameters.treeid)))
 		parameters.tree = tree
 	end
@@ -158,14 +158,16 @@ function TreeCreator:_getTree(treeFolder)
 	return Trees[treeFolder] or self:_createTree(treeFolder)
 end
 -- For tree ndoes to get a tree from
-function TreeCreator:_getGetTreeFromId(treeId)
+function TreeCreator:_getTreeFromId(treeId)
 	local tree = TreeIDs[treeId]
 	if not tree then
 		for i,folder in pairs(CollectionService:GetTagged(TREE_TAG)) do
 			if folder.Name == treeId then
-				return self:_createTree(folder)
+				return self:_getTree(folder)
 			end
 		end
+	else
+		return tree
 	end
 end
 
