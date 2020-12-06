@@ -478,7 +478,7 @@ function TreeProto:run(obj,...)
 
 	-- Editor debugging
 	local DebugEntityNode
-	if IsStudio then
+	if IsStudio and self.folder then
 		local treeName = self.folder.Name
 		local objName = tostring(obj)
 		local entities = RunningTreesFolder:FindFirstChild(treeName)
