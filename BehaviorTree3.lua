@@ -1,5 +1,5 @@
 --[[
-    BEHAVIOR TREES V4
+    BEHAVIOR TREES V5
     
 	Originally by iniich_n and tyridge77: https://devforum.roblox.com/t/behaviortree2-create-complex-behaviors-with-ease/451047
 	Forked and improved by defaultio
@@ -53,6 +53,13 @@
 				- Say you want an NPC to create a stack of nearby doors, then try to enter each door until there are no doors left to try, or the NPC got through a door.
 				- If the NPC got through a door successfully, the node would return success. Otherwise, if there were no doors that were able to be entered, the node will return fail
 				- Example pic: https://cdn.discordapp.com/attachments/711758878995513364/783523673704628294/unknown.png
+				
+				
+	Changes by tyridge77(May 5th, 2022)
+
+	-- Fixed critical issue where actors using the same tree borrowed the same running/paused state, effectively breaking all trees used by multiple actors(woops!)
+	-- Added Metaprox's "External Task" fork, which allows you to use Rojo with BTrees
+	
 --]]
 
 
@@ -63,16 +70,6 @@ local IsStudio = RunService:IsRunning() and RunService:IsStudio()
 local BehaviorTree = {}
 
 local SUCCESS,FAIL,RUNNING = 1,2,3
-
-
--------- Tree Index Lookup --------
-
--- Trees are now decoupled from instances, and cloning is not supported. This is to make it a bit cleaner and saves on memory
--- Due to this however, we need a new way to keep track of a particular running tree's current index
--- A simple solution which we will use is to use a mandatory object passed into the tree as a dictionary key to house the index
--- This object can be anything as long as it is a unique key(a table, an instance) 
-
-local IndexLookup = {} 
 
 
 -- Used by the BehaviorTree Editor plugin 
@@ -443,19 +440,21 @@ local TreeProto = {}
 function TreeProto:abort(obj,...)
 	assert(typeof(obj) == "table","The first argument of a behavior tree's abort method must be a table!")
 	local nodes = self.nodes
-	local index = self.IndexLookup[obj]
+	local data = self.DataLookup[obj]
 
-	if not index then
+	if not data then
 		return
 	end
-
+	
+	local index = data.index 
+	
 	local node = nodes[index]
 	if node.type == "task" then
 		if node.finish then
 			node.finish(obj,FAIL,...)
 		end
 	end
-	self.IndexLookup[obj] = 1
+	data.index = 1
 end
 
 
@@ -520,15 +519,27 @@ function TreeProto:run(obj,...)
 		DebugEntityNode = entity.Node
 	end
 	--
+	
 
-	if self.running then
+	local nodes = self.nodes
+	
+	--[[ Get data for this object or create new ]]
+	local data = self.DataLookup[obj]
+	if not data then
+		data = {index = 1}
+		self.DataLookup[obj] = data
+	end
+	--
+		
+	if data.running then
 		-- warn(debug.traceback("Tried to run BehaviorTree while it was already running"))
 		return
-	end	
-	local nodes = self.nodes
-	local index = self.IndexLookup[obj] or 1
-
-
+	end		
+	
+	if data.index == 1 then
+	print("Running: ",obj,data.index)
+	end
+	
 	-- Get entity blackboard
 	local blackboard = obj.Blackboard
 	if not blackboard then
@@ -543,13 +554,13 @@ function TreeProto:run(obj,...)
 
 	local nodeCount = #nodes
 
-	local didResume = self.paused
-	self.paused = false
-	self.running = true
+	local didResume = data.paused
+	data.paused = false
+	data.running = true
 
 	-- Loop over all nodes until complete or a task node returns RUNNING
-	while index <= nodeCount do
-		local node = nodes[index]
+	while data.index <= nodeCount do
+		local node = nodes[data.index]
 
 		-- Debug
 		if IsStudio then
@@ -574,18 +585,18 @@ function TreeProto:run(obj,...)
 			end
 
 			if status == RUNNING then
-				self.paused = true
+				data.paused = true
 				break
 			elseif status == SUCCESS then
 				if node.finish then
 					node.finish(obj,status, ...)
 				end
-				index = node.onsuccess
+				data.index = node.onsuccess
 			elseif status == FAIL then
 				if node.finish then
 					node.finish(obj,status, ...)
 				end
-				index = node.onfail
+				data.index = node.onfail
 			else
 				error("bad node.status")
 			end
@@ -622,18 +633,18 @@ function TreeProto:run(obj,...)
 				end	
 			end
 
-			index = result == true and node.onsuccess or node.onfail
+			data.index = result == true and node.onsuccess or node.onfail
 
 		elseif node.type == "tree" then
 			local treeResult = node.tree:run(obj,...)
 
 			if treeResult == RUNNING then
-				self.paused = true
+				data.paused = true
 				break
 			elseif treeResult == SUCCESS then
-				index = node.onsuccess
+				data.index = node.onsuccess
 			elseif treeResult == FAIL then
-				index = node.onfail
+				data.index = node.onfail
 			else
 				error("bad tree result")
 			end
@@ -643,16 +654,16 @@ function TreeProto:run(obj,...)
 			--------- COMPOSITE NODES ---------	
 
 		elseif node.type == "random" then
-			index = node.indices[math.random(1, #node.indices)]
+			data.index = node.indices[math.random(1, #node.indices)]
 
 
 			-----------------------------------
 			--------- DECORATOR NODES ---------	
 
 		elseif node.type == "repeat-start" then
-			index = index + 1
+			data.index = data.index + 1
 
-			local repeatNode = nodes[index]
+			local repeatNode = nodes[data.index]
 			repeatNode.repeatCount = 0
 
 
@@ -660,20 +671,16 @@ function TreeProto:run(obj,...)
 			node.repeatCount = node.repeatCount + 1
 
 			if node.repeatCount > node.repeatGoal then
-				index = node.onsuccess
+				data.index = node.onsuccess
 			else
-				index = index + 1
+				data.index = data.index + 1
 			end
 
 
 		elseif node.type == "succeed" then -- Hanging succeed node (technically a leaf)
-			index = node.onsuccess
-
-
+			data.index = node.onsuccess
 		elseif node.type == "fail" then -- Hanging fail node (technically a leaf)
-			index = node.onfail
-
-
+			data.index = node.onfail
 		else
 			error("bad node.type")
 		end
@@ -684,16 +691,16 @@ function TreeProto:run(obj,...)
 	-- +1 indicates success; +2 indicates fail
 	-- If index is <= node count, then tree must be running
 	local treeOutcome
-	if index == nodeCount + 1 then
+	if data.index == nodeCount + 1 then
 		treeOutcome = SUCCESS
-	elseif index == nodeCount + 2 then
+	elseif data.index == nodeCount + 2 then
 		treeOutcome = FAIL
 	else
 		treeOutcome = RUNNING
 	end
 
-	self.IndexLookup[obj] = index <= nodeCount and index or 1
-	self.running = false
+	data.index = data.index <= nodeCount and data.index or 1
+	data.running = false
 
 	return treeOutcome
 end
@@ -706,13 +713,13 @@ TreeProto.Abort = TreeProto.abort
 function BehaviorTree:new(params)
 	local tree = params.tree
 	local nodes = {}
-	local IndexLookup = {}
+	local DataLookup = {}
 
 	ProcessNode({type = "root", tree = tree, params = {}}, nodes)
 
 	return setmetatable({
 		nodes = nodes,
-		IndexLookup = IndexLookup,
+		DataLookup = DataLookup,
 		folder = params.treeFolder,
 	}, { __index = TreeProto })
 end
@@ -734,8 +741,9 @@ BehaviorTree.Invert = function(params) return {type = "invert", params = params}
 BehaviorTree.Repeat = function(params) return {type = "repeat", params = params} end
 
 
--- Leafes
+-- Leafs
 BehaviorTree.Task = function(params) return {type = "task", params = params} end
+BehaviorTree["External Task"] = function(params) return {type = "task", params = params} end
 BehaviorTree.Tree = function(params) return {type = "tree", params = params} end
 BehaviorTree["Blackboard Query"] = function(params) return {type = "blackboard", params = params} end
 
