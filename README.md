@@ -16,7 +16,7 @@ This module is a fork of BehaviorTrees2 by oniich_n. The following are the impro
 * Added comments and documentation so it's a little easier to add new nodes
 * Changed "Task"/"Selector" language to more generic "Leaf"/"Composite"
 
-V5:
+V5: (March 2022)
 
 * Added Metaprox's External Task fork, to allow for rojo support
 * Fixed critical issue in behavior trees where multiple actors wouldn't properly keep track of their running states
