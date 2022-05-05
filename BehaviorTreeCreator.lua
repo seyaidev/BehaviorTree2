@@ -1,5 +1,5 @@
 --[[
-    BEHAVIOR TREE CREATOR V4
+    BEHAVIOR TREE CREATOR V5
 	
 	Originally by tyridge77: https://devforum.roblox.com/t/btrees-visual-editor-v2-0/461015
 	Forked and improved by defaultio
@@ -20,7 +20,7 @@ local CollectionService = game:GetService("CollectionService")
 local TREE_TAG = "_BTree"
 
 local TreeCreator = {}
-local BehaviorTree3 = require(script.BehaviorTree3)
+local BehaviorTree3 = require(script.BehaviorTree5)
 
 local Trees = {}
 local SourceTasks = {}
@@ -32,7 +32,7 @@ local TreeIDs = {}
 -- Create tree object from a treeFolder.
 function TreeCreator:Create(treeFolder)
 	assert(treeFolder, "Invalid parameters, expecting treeFolder, object")
-	
+
 	local Tree = self:_getTree(treeFolder)
 	if Tree then
 		return Tree
@@ -86,7 +86,15 @@ function TreeCreator:_getSourceTask(folder)
 		return GetModule(ModuleScript)
 	end
 end
-
+function TreeCreator:_getExternalSourceTask(folder)
+	local SourcePeram = folder.Parameters:FindFirstChild("Source")
+	if SourcePeram then
+		local Source = SourcePeram.Value
+		if Source then
+			return GetModule(Source)
+		end
+	end
+end
 
 
 function TreeCreator:_buildNode(folder)
@@ -106,7 +114,7 @@ function TreeCreator:_buildNode(folder)
 	for i = 1,#orderedChildren do
 		orderedChildren[i] = self:_buildNode(orderedChildren[i].Value)
 	end
-	
+
 	-- Get parameters from parameters folder
 	local parameters = {}
 	for _, value in pairs(folder.Parameters:GetChildren()) do
@@ -114,7 +122,7 @@ function TreeCreator:_buildNode(folder)
 			parameters[string.lower(value.Name)] = value.Value
 		end
 	end
-	
+
 	-- Add nodes and task module/tree to node parameters
 	parameters.nodes = orderedChildren
 	parameters.nodefolder = folder
@@ -124,16 +132,22 @@ function TreeCreator:_buildNode(folder)
 		parameters.start = sourcetask.start
 		parameters.run = sourcetask.run
 		parameters.finish = sourcetask.finish
+	elseif nodeType == "External Task" then
+		local sourcetask = self:_getExternalSourceTask(folder)
+		assert(sourcetask, "could't build tree; external task node had no source")
+		parameters.start = sourcetask.start
+		parameters.run = sourcetask.run
+		parameters.finish = sourcetask.finish
 	elseif nodeType == "Tree" then
 		local tree = self:_getTreeFromId(parameters.treeid)
 		assert(tree, string.format("could't build tree; couldn't get tree object for tree node with TreeID:  %s!",tostring(parameters.treeid)))
 		parameters.tree = tree
 	end
-	
+
 	-- Initialize node with BehaviorTree3
 	local node = BehaviorTree3[nodeType](parameters)
 	node.weight=weight
-	
+
 	return node
 end
 
@@ -144,7 +158,7 @@ function TreeCreator:_createTree(treeFolder)
 	local RootFolder = nodes:FindFirstChild("Root")
 	assert(RootFolder, string.format("Could not find Root under BehaviorTrees.Trees.%s.Nodes!",treeFolder.Name))
 	assert(#RootFolder.Outputs:GetChildren() == 1, string.format("The root node does not have exactly one connection for %s!",treeFolder.Name))
-	
+
 	local firstNodeFolder = RootFolder.Outputs:GetChildren()[1].Value
 	local root = self:_buildNode(firstNodeFolder)
 	local Tree = BehaviorTree3:new({tree=root,treeFolder = treeFolder})
