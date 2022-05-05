@@ -16,6 +16,12 @@ This module is a fork of BehaviorTrees2 by oniich_n. The following are the impro
 * Added comments and documentation so it's a little easier to add new nodes
 * Changed "Task"/"Selector" language to more generic "Leaf"/"Composite"
 
+V5:
+
+* Added Metaprox's External Task fork, to allow for rojo support
+* Fixed critical issue in behavior trees where multiple actors wouldn't properly keep track of their running states
+
+
 BehaviorTree5 is an implementation of the "behavior tree" paradigm for managing behavior. This allows us to create relatively complex patterns of behavior without much getting "lost in the sauce", so to speak. In *behavior trees*, actions are represented as **tasks**, or "leaves". These tasks are then collected in a container called a **tree**, which we "run" through in order to determine what task should be done at a given point in time.
 
 ## Nodes
