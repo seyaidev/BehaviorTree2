@@ -535,11 +535,7 @@ function TreeProto:run(obj,...)
 		-- warn(debug.traceback("Tried to run BehaviorTree while it was already running"))
 		return
 	end		
-	
-	if data.index == 1 then
-	print("Running: ",obj,data.index)
-	end
-	
+
 	-- Get entity blackboard
 	local blackboard = obj.Blackboard
 	if not blackboard then
