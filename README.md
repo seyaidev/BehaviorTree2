@@ -1,4 +1,4 @@
-# BehaviorTree5
+# BehaviorTree5(Latest update: May 5th, 2022)
 
 This module is a fork of BehaviorTrees2 by oniich_n. The following are the improvements/changes:
 * Previously, Decorators would only work when parented to Task node. Now, they can be placed arbitrarily, and even chained together, and will work as expected. Internally, decorators work slightly differently, but I preserved the clever and efficient tree traversal algorithm that oniich_n implemented in BehaviorTrees2. Should still be just as fast.
@@ -16,7 +16,7 @@ This module is a fork of BehaviorTrees2 by oniich_n. The following are the impro
 * Added comments and documentation so it's a little easier to add new nodes
 * Changed "Task"/"Selector" language to more generic "Leaf"/"Composite"
 
-V5: (March 2022)
+V5: (May 2022)
 
 * Added Metaprox's External Task fork, to allow for rojo support
 * Fixed critical issue in behavior trees where multiple actors wouldn't properly keep track of their running states
