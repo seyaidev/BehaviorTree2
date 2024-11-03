@@ -1,5 +1,7 @@
 # BehaviorTree2
 
+## No longer being maintained, see [BehaviorTrees3](https://github.com/Defaultio/BehaviorTree3)
+
 BehaviorTree2 is an implementation of the "behavior tree" paradigm for managing behavior. This allows us to create relatively complex patterns of behavior without much getting "lost in the sauce", so to speak. In *behavior trees*, actions are represented as **tasks**, or "leaves". These tasks are then collected in a container called a **tree**, which we "run" through in order to determine what task should be done at a given point in time.
 
 **Huge props** to tyridge77 for his work on the optimzations made in his rewrite of the original module, as well as his [new plugin to visually create behavior trees](https://devforum.roblox.com/t/free-btrees-visual-editor-v1-0/461015)!
